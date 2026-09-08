@@ -8,6 +8,7 @@ import { TriageCard } from "../../components/patient/TriageCard";
 import { cn } from "../../lib/utils";
 import Link from "next/link";
 import { dashboardApi, triageApi, type DashboardSummary, type TriageSession } from "../../lib/api";
+import { ProtectedRoute } from "../../components/auth/ProtectedRoute";
 
 /* ─── Priority map from triage session state ── */
 function sessionPriority(session: TriageSession): "emergency" | "high" | "normal" | "low" {
@@ -88,89 +89,91 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="flex h-[calc(100vh-64px)]">
-      {/* Sidebar — hidden on mobile */}
-      <div className="hidden md:block flex-shrink-0 w-64 overflow-y-auto">
-        <Sidebar />
-      </div>
+    <ProtectedRoute>
+      <div className="flex h-[calc(100vh-64px)]">
+        {/* Sidebar — hidden on mobile */}
+        <div className="hidden md:block flex-shrink-0 w-64 overflow-y-auto">
+          <Sidebar />
+        </div>
 
-      {/* Main content */}
-      <div className="flex-1 overflow-y-auto bg-bgLight p-6">
-        {/* Header */}
-        <header className="mb-8">
-          <h1 className="font-display text-2xl font-bold text-primary">
-            MediFlow Dashboard 👋
-          </h1>
-          <p className="text-secondary text-sm mt-1">
-            Live overview — {new Date().toDateString()}
-          </p>
-        </header>
+        {/* Main content */}
+        <div className="flex-1 overflow-y-auto bg-bgLight p-6">
+          {/* Header */}
+          <header className="mb-8">
+            <h1 className="font-display text-2xl font-bold text-primary">
+              MediFlow Dashboard 👋
+            </h1>
+            <p className="text-secondary text-sm mt-1">
+              Live overview — {new Date().toDateString()}
+            </p>
+          </header>
 
-        {/* Error banner */}
-        {error && (
-          <div className="mb-6 bg-danger/10 border border-danger/20 rounded-xl px-4 py-3 text-danger text-sm font-medium">
-            ⚠ {error}
-          </div>
-        )}
-
-        {/* Summary cards */}
-        <section
-          className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
-          aria-label="Summary statistics"
-        >
-          {summaryCards.map(({ label, value, icon: Icon, borderColor, iconColor }) => (
-            <Card key={label} className={cn("border-t-4", borderColor)}>
-              <div className="flex items-center justify-between mb-3">
-                <Icon className={cn("w-5 h-5", iconColor)} aria-hidden="true" />
-              </div>
-              <p className="font-display text-2xl font-bold text-primary">{value}</p>
-              <p className="text-sm text-secondary mt-1">{label}</p>
-            </Card>
-          ))}
-        </section>
-
-        {/* Triage queue from real sessions */}
-        <section aria-label="Active triage queue">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-display text-lg font-semibold text-primary">
-              Active Triage Sessions
-            </h2>
-            <Link
-              href="/triage"
-              className="text-secondary text-sm hover:underline hover:text-primary transition-colors"
-            >
-              View All
-            </Link>
-          </div>
-
-          {loading ? (
-            <div className="flex flex-col gap-3">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="h-20 bg-white rounded-xl border border-bgSoft animate-pulse" />
-              ))}
-            </div>
-          ) : sessions.length === 0 ? (
-            <div className="text-center py-12 bg-white rounded-xl border border-bgSoft">
-              <p className="text-primary/50 font-medium">No active triage sessions.</p>
-              <p className="text-primary/30 text-sm mt-1">Sessions will appear here once patients start the AI triage flow.</p>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-3">
-              {sessions.slice(0, 8).map((session) => (
-                <TriageCard
-                  key={session.sessionId || session._id}
-                  name={session.patientName || "Unknown Patient"}
-                  age={0}
-                  condition={session.status || "In Progress"}
-                  priority={sessionPriority(session)}
-                  waitTime={new Date(session.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                  assignedDoctor="—"
-                />
-              ))}
+          {/* Error banner */}
+          {error && (
+            <div className="mb-6 bg-danger/10 border border-danger/20 rounded-xl px-4 py-3 text-danger text-sm font-medium">
+              ⚠ {error}
             </div>
           )}
-        </section>
+
+          {/* Summary cards */}
+          <section
+            className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
+            aria-label="Summary statistics"
+          >
+            {summaryCards.map(({ label, value, icon: Icon, borderColor, iconColor }) => (
+              <Card key={label} className={cn("border-t-4", borderColor)}>
+                <div className="flex items-center justify-between mb-3">
+                  <Icon className={cn("w-5 h-5", iconColor)} aria-hidden="true" />
+                </div>
+                <p className="font-display text-2xl font-bold text-primary">{value}</p>
+                <p className="text-sm text-secondary mt-1">{label}</p>
+              </Card>
+            ))}
+          </section>
+
+          {/* Triage queue from real sessions */}
+          <section aria-label="Active triage queue">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-display text-lg font-semibold text-primary">
+                Active Triage Sessions
+              </h2>
+              <Link
+                href="/triage"
+                className="text-secondary text-sm hover:underline hover:text-primary transition-colors"
+              >
+                View All
+              </Link>
+            </div>
+
+            {loading ? (
+              <div className="flex flex-col gap-3">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="h-20 bg-white rounded-xl border border-bgSoft animate-pulse" />
+                ))}
+              </div>
+            ) : sessions.length === 0 ? (
+              <div className="text-center py-12 bg-white rounded-xl border border-bgSoft">
+                <p className="text-primary/50 font-medium">No active triage sessions.</p>
+                <p className="text-primary/30 text-sm mt-1">Sessions will appear here once patients start the AI triage flow.</p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {sessions.slice(0, 8).map((session) => (
+                  <TriageCard
+                    key={session.sessionId || session._id}
+                    name={session.patientName || "Unknown Patient"}
+                    age={0}
+                    condition={session.status || "In Progress"}
+                    priority={sessionPriority(session)}
+                    waitTime={new Date(session.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    assignedDoctor="—"
+                  />
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 }

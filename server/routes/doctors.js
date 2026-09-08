@@ -6,13 +6,12 @@ const {
 } = require('../controllers/doctorController');
 const { protect, authorize } = require('../middleware/auth');
 
-// router.use(protect);
-
-router.get('/', getDoctors);
-router.get('/:id', getDoctor);
-router.post('/', authorize('admin'), createDoctor);
-router.put('/:id', authorize('admin'), updateDoctor);
-router.patch('/:id/availability', toggleAvailability);
-router.delete('/:id', authorize('admin'), deleteDoctor);
+router.get('/',                    protect, getDoctors);
+router.get('/:id',                protect, getDoctor);
+router.post('/',                   protect, authorize('admin'), createDoctor);
+router.put('/:id',                protect, authorize('admin', 'doctor'), updateDoctor);
+router.patch('/:id/availability', protect, authorize('admin', 'doctor'), toggleAvailability);
+router.delete('/:id',             protect, authorize('admin'), deleteDoctor);
 
 module.exports = router;
+

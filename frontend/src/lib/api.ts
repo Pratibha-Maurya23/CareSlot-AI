@@ -43,6 +43,7 @@ async function request<T>(
   const res = await fetch(`${BASE_URL}${path}`, {
     method,
     headers: { ...authHeaders(), ...extraHeaders },
+    credentials: "include",
     cache: 'no-store',
     ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
   });
@@ -131,32 +132,50 @@ export interface Doctor {
   specialization: string;
   email?: string;
   phone?: string;
-  available: boolean;
+  available?: boolean;
+  isAvailable?: boolean;
   patients?: number;
+  totalPatients?: number;
   rating?: number;
-  fee?: string;
+  fee?: string | number;
+  consultationFee?: number | string;
   location?: string;
+  qualification?: string;
+  experience?: number;
+  department?: string;
+  bio?: string;
 }
 
 export interface Appointment {
   _id: string;
   patientName?: string;
   patientId?: string;
+  patient?: any;
   doctorId?: string;
   doctorName?: string;
+  doctor?: any;
   specialization?: string;
   clinicName?: string;
   dateTime?: string;
+  date?: string | Date;
+  timeSlot?: string;
   status: string;
+  priority?: string;
+  risk?: string;
+  type?: string;
   fee?: string;
   reason?: string;
+  notes?: string;
+  prescription?: string;
+  recommendedTests?: string;
   createdAt?: string;
 }
 
 export interface DashboardSummary {
   totalPatients: number;
   todayAppointments: number;
-  emergencyPatients: number;
+  emergencyPatients?: number;
+  emergencyCases?: number;
   availableDoctors: number;
 }
 
@@ -228,6 +247,20 @@ export const authApi = {
   },
 
   me: () => get<{ success: boolean; user: AuthResponse["user"] }>("/api/auth/me"),
+
+  logout: async () => {
+    try {
+      await post<{ success: boolean; message: string }>("/api/auth/logout", {});
+    } catch {
+      // Ignore errors on logout
+    }
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("mediflow_token");
+      localStorage.removeItem("mediflow_doctor_token");
+      localStorage.removeItem("mediflow_admin_token");
+      localStorage.removeItem("mediflow_user");
+    }
+  },
 };
 
 // ─── TRIAGE ───────────────────────────────────────────────────────────────────
@@ -270,6 +303,8 @@ export const doctorsApi = {
   update:           (id: string, data: Partial<Doctor>) => put<{ success: boolean; doctor: Doctor }>(`/api/doctors/${id}`, data),
   updateAvailability: (id: string, available: boolean) =>
     patch<{ success: boolean; doctor: Doctor }>(`/api/doctors/${id}/availability`, { available }),
+  toggleAvailability: (id: string) =>
+    patch<{ success: boolean; data: Doctor; message?: string }>(`/api/doctors/${id}/availability`, {}),
 };
 
 // ─── APPOINTMENTS ─────────────────────────────────────────────────────────────

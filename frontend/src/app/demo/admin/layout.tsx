@@ -9,14 +9,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
   const [isAuthorized, setIsAuthorized] = useState(false);
 
+  const isAuthPage = pathname === "/demo/admin/auth";
+
   useEffect(() => {
+    if (isAuthPage) return;
     const token = localStorage.getItem("mediflow_admin_token");
     if (!token) {
       router.replace("/demo/admin/auth");
     } else {
       setIsAuthorized(true);
     }
-  }, [router]);
+  }, [router, isAuthPage]);
+
+  if (isAuthPage) {
+    return <>{children}</>;
+  }
 
   if (!isAuthorized) {
     return (

@@ -46,15 +46,15 @@ export default function MyDoctorsPage() {
 
       // Filter completed appointments
       const completed = list.filter((a: any) => ["completed", "Completed"].includes(a.status));
-      
+
       // Group by doctor (keep the most recent one for prescription details)
       completed.sort((a: any, b: any) => new Date(b.dateTime || b.date).getTime() - new Date(a.dateTime || a.date).getTime());
-      
+
       const uniqueDocsMap = new Map();
       completed.forEach((apt: any) => {
         const docObj = typeof apt.doctor === 'object' && apt.doctor !== null ? apt.doctor : null;
         const docId = docObj?._id || apt.doctor || apt.doctorId;
-        
+
         if (docId && !uniqueDocsMap.has(docId)) {
           uniqueDocsMap.set(docId, {
             ...docObj,
@@ -68,7 +68,7 @@ export default function MyDoctorsPage() {
           });
         }
       });
-      
+
       setPastDoctors(Array.from(uniqueDocsMap.values()));
     } catch (err) {
       console.error(err);
@@ -97,7 +97,7 @@ export default function MyDoctorsPage() {
 
       // Proceed with booking
       const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
-      
+
       await appointmentsApi.create({
         doctor: doc._id,
         patient: userId,
@@ -113,7 +113,7 @@ export default function MyDoctorsPage() {
       });
 
       alert(`Appointment successfully re-booked with ${doc.doctorName}! Check your Appointments page.`);
-      
+
       await loadData();
       window.dispatchEvent(new Event("appointmentUpdated"));
     } catch (err) {
@@ -125,11 +125,10 @@ export default function MyDoctorsPage() {
 
   return (
     <>
-      <DemoNavbar title="My Care Team" />
       <div className="flex min-h-screen bg-bgLight">
         <PatientSidebar
           activeTab="my-doctors"
-          onTabChange={() => {}}
+          onTabChange={() => { }}
           patientName={userName}
           riskLabel="Active"
           riskColor="bg-success/10 text-success border-success/30"
@@ -158,7 +157,7 @@ export default function MyDoctorsPage() {
 
                 return (
                   <div key={doc._id || idx} className="bg-white border border-[#E2E8F0] rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row">
-                    
+
                     {/* Doctor Info Section */}
                     <div className="p-6 border-b md:border-b-0 md:border-r border-[#E2E8F0] md:w-1/3 flex flex-col bg-[#F8FAFC]">
                       <div className="flex items-center gap-4 mb-4">
@@ -170,7 +169,7 @@ export default function MyDoctorsPage() {
                           <p className="text-[13px] font-bold text-[#0A7029] bg-[#E7FCE3] inline-block px-2 py-0.5 rounded-md mt-1.5">{doc.specialization}</p>
                         </div>
                       </div>
-                      
+
                       <div className="grid grid-cols-2 gap-y-3 mt-auto">
                         <span className="flex items-center gap-1.5 text-[13px] text-[#64748B] font-medium">
                           <span className="text-[14px]">⭐</span> {docRating}
@@ -182,7 +181,7 @@ export default function MyDoctorsPage() {
                           <span className="text-[14px]">🩺</span> {docExp}
                         </span>
                       </div>
-                      
+
                       <button
                         onClick={() => handleRebook(doc)}
                         disabled={rebooking === doc._id}
@@ -222,7 +221,7 @@ export default function MyDoctorsPage() {
                           )}
                         </div>
                       </div>
-                      
+
                       <div className="mt-auto pt-4 border-t border-[#E2E8F0] flex justify-between items-center">
                         <span className="text-[12px] text-[#94A3B8] font-medium">
                           Last Visit: {doc.lastVisit ? new Date(doc.lastVisit).toLocaleDateString([], { dateStyle: 'medium' }) : "Unknown"}

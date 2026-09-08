@@ -1,4 +1,5 @@
 const Patient = require('../models/Patient');
+const logger = require('../utils/logger');
 
 // @desc    Get all patients (with search & filter)
 // @route   GET /api/patients
@@ -47,6 +48,7 @@ const getPatients = async (req, res, next) => {
       data:       patients,
     });
   } catch (error) {
+    logger.error('Error fetching patients list', error);
     next(error);
   }
 };
@@ -66,6 +68,7 @@ const getPatient = async (req, res, next) => {
 
     res.json({ success: true, data: patient });
   } catch (error) {
+    logger.error(`Error fetching patient ${req.params.id}`, error);
     next(error);
   }
 };
@@ -76,12 +79,14 @@ const getPatient = async (req, res, next) => {
 const createPatient = async (req, res, next) => {
   try {
     const patient = await Patient.create(req.body);
+    logger.info(`Patient registered: ID ${patient._id} (${patient.name})`);
     res.status(201).json({
       success: true,
       message: 'Patient registered successfully.',
       data: patient,
     });
   } catch (error) {
+    logger.error('Error creating patient', error);
     next(error);
   }
 };
@@ -98,15 +103,18 @@ const updatePatient = async (req, res, next) => {
     ).populate('assignedDoctor', 'name specialization');
 
     if (!patient) {
+      logger.warn(`Patient update failed: ID ${req.params.id} not found`);
       return res.status(404).json({ success: false, message: 'Patient not found.' });
     }
 
+    logger.info(`Patient updated: ID ${patient._id} (${patient.name})`);
     res.json({
       success: true,
       message: 'Patient updated successfully.',
       data: patient,
     });
   } catch (error) {
+    logger.error(`Error updating patient ${req.params.id}`, error);
     next(error);
   }
 };
@@ -123,11 +131,14 @@ const deletePatient = async (req, res, next) => {
     );
 
     if (!patient) {
+      logger.warn(`Patient deletion failed: ID ${req.params.id} not found`);
       return res.status(404).json({ success: false, message: 'Patient not found.' });
     }
 
+    logger.info(`Patient soft deleted: ID ${req.params.id}`);
     res.json({ success: true, message: 'Patient record deleted.' });
   } catch (error) {
+    logger.error(`Error deleting patient ${req.params.id}`, error);
     next(error);
   }
 };

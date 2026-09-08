@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { callLLM, callLLMMessages } = require('./groqClient');
+const logger = require('../utils/logger');
 
 const getPrompt = (id) => {
   const prompts = JSON.parse(
@@ -91,6 +92,8 @@ const decisionAgent = async (triageResult, symptoms) => {
 const runAgentLoop = async (session) => {
   const { symptoms, conversationHistory, questionCount } = session;
 
+  logger.debug(`Agent loop triggered for session ${session._id}, questionCount: ${questionCount}`);
+
   // ✅ 3 questions max (questionCount tracks patient *answers*, not agent questions)
   if (questionCount < 3) {
     const question = await questioningAgent(symptoms, conversationHistory);
@@ -98,6 +101,8 @@ const runAgentLoop = async (session) => {
     // ✅ Save agent's question into history so next call sees it
     session.conversationHistory.push({ role: 'assistant', content: question });
     await session.save();
+
+    logger.debug(`Agent generated follow-up question for session ${session._id}`);
 
     return {
       state: 'QUESTIONING',
@@ -107,6 +112,7 @@ const runAgentLoop = async (session) => {
   }
 
   // Enough info — triage now
+  logger.info(`Running final triage & decision agents for session ${session._id}`);
   const triage = await triageAgent(symptoms, conversationHistory);
   const decision = await decisionAgent(triage, symptoms);
 

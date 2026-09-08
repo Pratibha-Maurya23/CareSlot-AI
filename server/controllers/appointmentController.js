@@ -1,5 +1,6 @@
 const Appointment = require('../models/Appointment');
 const Doctor = require('../models/Doctor');
+const logger = require('../utils/logger');
 
 // @desc    Get all appointments (with filters)
 // @route   GET /api/appointments
@@ -89,11 +90,21 @@ const getAppointment = async (req, res, next) => {
 
 // @desc    Book new appointment
 // @route   POST /api/appointments
-// @access  Private
+// @access  Public / Private (supports optional auth)
 const createAppointment = async (req, res, next) => {
   try {
     const body = { ...req.body };
     
+    // Attach logged in patient if available and not explicitly provided
+    if (req.user) {
+      if (!body.patient && req.user._id) {
+        body.patient = req.user._id;
+      }
+      if (!body.patientName && req.user.name) {
+        body.patientName = req.user.name;
+      }
+    }
+
     if (body.priority === undefined) {
       const risk = (body.risk || "").toLowerCase();
       if (risk.includes("emergency")) {
@@ -114,12 +125,15 @@ const createAppointment = async (req, res, next) => {
       );
     }
 
+    logger.info(`Appointment booked successfully: ID ${appointment._id} for patient ${appointment.patientName || appointment.patient} with doctor ${appointment.doctor || 'unassigned'}`);
+
     res.status(201).json({
       success: true,
       message: 'Appointment created successfully.',
       data: appointment,
     });
   } catch (error) {
+    logger.error('Failed to create appointment', error);
     next(error);
   }
 };
@@ -136,10 +150,13 @@ const updateAppointment = async (req, res, next) => {
     .populate('doctor',  'name specialization consultationFee rating experience');
 
     if (!appt) {
+      logger.warn(`Appointment update failed: ID ${req.params.id} not found`);
       return res.status(404).json({ success: false, message: 'Appointment not found.' });
     }
+    logger.info(`Appointment ${req.params.id} updated successfully`);
     res.json({ success: true, message: 'Appointment updated.', data: appt });
   } catch (error) {
+    logger.error(`Error updating appointment ${req.params.id}`, error);
     next(error);
   }
 };
@@ -155,10 +172,13 @@ const cancelAppointment = async (req, res, next) => {
       { new: true }
     );
     if (!appt) {
+      logger.warn(`Appointment cancellation failed: ID ${req.params.id} not found`);
       return res.status(404).json({ success: false, message: 'Appointment not found.' });
     }
+    logger.info(`Appointment ${req.params.id} cancelled successfully`);
     res.json({ success: true, message: 'Appointment cancelled.' });
   } catch (error) {
+    logger.error(`Error cancelling appointment ${req.params.id}`, error);
     next(error);
   }
 };

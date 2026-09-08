@@ -4,15 +4,14 @@ const {
   getAppointments, getTodayAppointments, getAppointment,
   createAppointment, updateAppointment, cancelAppointment,
 } = require('../controllers/appointmentController');
-const { protect } = require('../middleware/auth');
-
-// router.use(protect); // Removed global protect to allow guest chatbot booking
+const { protect, optionalProtect } = require('../middleware/auth');
 
 router.get('/today',  protect, getTodayAppointments);
 router.get('/',       protect, getAppointments);
 router.get('/:id',    protect, getAppointment);
-router.post('/',      createAppointment); // Unprotected for chatbot
+router.post('/',      optionalProtect, createAppointment); // Supports guest booking & logged-in patients
 router.put('/:id',    protect, updateAppointment);
 router.delete('/:id', protect, cancelAppointment);
 
 module.exports = router;
+

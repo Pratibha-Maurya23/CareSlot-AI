@@ -1,12 +1,12 @@
+const logger = require('../utils/logger');
+
 // Global error handler middleware
 const errorHandler = (err, req, res, next) => {
   let error = { ...err };
   error.message = err.message;
 
-  // Log error in development
-  if (process.env.NODE_ENV === 'development') {
-    console.error('❌ Error:', err);
-  }
+  // Log error using centralized logger
+  logger.error(`Error on ${req.method} ${req.originalUrl || req.url}`, err);
 
   // Mongoose bad ObjectId
   if (err.name === 'CastError') {

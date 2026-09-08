@@ -16,14 +16,21 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
   const pathname = usePathname();
   const [isAuthorized, setIsAuthorized] = useState(false);
 
+  const isAuthPage = pathname === "/demo/doctor/auth";
+
   useEffect(() => {
+    if (isAuthPage) return;
     const token = localStorage.getItem("mediflow_doctor_token");
     if (!token) {
       router.replace("/demo/doctor/auth");
     } else {
       setIsAuthorized(true);
     }
-  }, [router]);
+  }, [router, isAuthPage]);
+
+  if (isAuthPage) {
+    return <>{children}</>;
+  }
 
   if (!isAuthorized) {
     return (

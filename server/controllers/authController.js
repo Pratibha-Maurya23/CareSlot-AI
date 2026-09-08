@@ -2,13 +2,22 @@ const jwt = require('jsonwebtoken');
 const Patient = require('../models/Patient');
 const Doctor = require('../models/Doctor');
 const User = require('../models/User');
+const logger = require('../utils/logger');
 
 // Helper: generate JWT token
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRE,
+    expiresIn: process.env.JWT_EXPIRE || '7d',
   });
 };
+
+// Helper: cookie configuration for auth token
+const getCookieOptions = () => ({
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+});
 
 // Helper: format patient response (all health fields)
 const formatPatient = (p) => ({
@@ -62,6 +71,7 @@ const register = async (req, res, next) => {
     // Check if patient already exists
     const existing = await Patient.findOne({ email });
     if (existing) {
+      logger.warn(`Patient registration failed: email already exists (${email})`);
       return res.status(400).json({ success: false, message: 'Email already registered.' });
     }
 
@@ -81,6 +91,9 @@ const register = async (req, res, next) => {
     });
 
     const token = generateToken(patient._id);
+    res.cookie('token', token, getCookieOptions());
+
+    logger.info(`New patient registered: ${patient.email} (ID: ${patient._id})`);
 
     res.status(201).json({
       success: true,
@@ -106,6 +119,7 @@ const registerDoctor = async (req, res, next) => {
     // Check if doctor already exists
     const existing = await Doctor.findOne({ email });
     if (existing) {
+      logger.warn(`Doctor registration failed: email already exists (${email})`);
       return res.status(400).json({ success: false, message: 'Email already registered.' });
     }
 
@@ -120,6 +134,9 @@ const registerDoctor = async (req, res, next) => {
     });
 
     const token = generateToken(doctor._id);
+    res.cookie('token', token, getCookieOptions());
+
+    logger.info(`New doctor registered: ${doctor.email} (ID: ${doctor._id})`);
 
     res.status(201).json({
       success: true,
@@ -149,9 +166,12 @@ const login = async (req, res, next) => {
       const isMatch = await patient.matchPassword(password);
       if (isMatch) {
         if (!patient.isActive) {
+          logger.warn(`Login rejected: patient account deactivated (${email})`);
           return res.status(401).json({ success: false, message: 'Account has been deactivated.' });
         }
         const token = generateToken(patient._id);
+        res.cookie('token', token, getCookieOptions());
+        logger.info(`Patient logged in: ${patient.email}`);
         return res.json({
           success: true,
           message: 'Login successful.',
@@ -167,9 +187,12 @@ const login = async (req, res, next) => {
       const isMatch = await doctor.matchPassword(password);
       if (isMatch) {
         if (!doctor.isActive) {
+          logger.warn(`Login rejected: doctor account deactivated (${email})`);
           return res.status(401).json({ success: false, message: 'Doctor account deactivated.' });
         }
         const token = generateToken(doctor._id);
+        res.cookie('token', token, getCookieOptions());
+        logger.info(`Doctor logged in: ${doctor.email}`);
         return res.json({
           success: true,
           message: 'Login successful (Doctor Access).',
@@ -185,6 +208,8 @@ const login = async (req, res, next) => {
       const isMatch = await systemUser.matchPassword(password);
       if (isMatch) {
         const token = generateToken(systemUser._id);
+        res.cookie('token', token, getCookieOptions());
+        logger.info(`Admin logged in: ${systemUser.email}`);
         return res.json({
           success: true,
           message: 'Login successful (Admin Access).',
@@ -199,10 +224,28 @@ const login = async (req, res, next) => {
       }
     }
 
+    logger.warn(`Failed login attempt for email: ${email}`);
     return res.status(401).json({ success: false, message: 'Invalid email or password.' });
   } catch (error) {
     next(error);
   }
+};
+
+// @desc    Logout user / clear cookie
+// @route   POST /api/auth/logout
+// @access  Public
+const logout = async (req, res) => {
+  res.cookie('token', '', {
+    httpOnly: true,
+    expires: new Date(0),
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+  });
+  logger.info('User logged out / cookie cleared');
+  res.status(200).json({
+    success: true,
+    message: 'Logged out successfully.',
+  });
 };
 
 // @desc    Get current logged-in user
@@ -239,16 +282,18 @@ const changePassword = async (req, res, next) => {
 
     const isMatch = await user.matchPassword(currentPassword);
     if (!isMatch) {
+      logger.warn(`Password change failed for user: ${req.user.email || req.user._id} (incorrect current password)`);
       return res.status(400).json({ success: false, message: 'Current password is incorrect.' });
     }
 
     user.password = newPassword;
     await user.save();
 
+    logger.info(`Password updated successfully for user: ${req.user.email || req.user._id}`);
     res.json({ success: true, message: 'Password updated successfully.' });
   } catch (error) {
     next(error);
   }
 };
 
-module.exports = { register, registerDoctor, login, getMe, changePassword };
+module.exports = { register, registerDoctor, login, logout, getMe, changePassword };

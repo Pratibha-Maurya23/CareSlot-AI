@@ -1,11 +1,9 @@
-"use client";
-
 import React from "react";
-import { LayoutDashboard, HeartPulse, BarChart2, Lightbulb, Bot, Calendar, History, LogOut, Activity } from "lucide-react";
+import { LayoutDashboard, HeartPulse, BarChart2, Lightbulb, Bot, Calendar, History, LogOut, Activity, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 
-export type PatientTab = "overview" | "health-summary" | "analytics" | "recommendations" | "my-doctors";
+export type PatientTab = "overview" | "profile" | "appointments" | "my-doctors" | "health-history" | "chat" | "health-summary" | "analytics" | "recommendations";
 
 interface NavItem {
   id: PatientTab | "chat" | "appointments" | "health-history";
@@ -21,9 +19,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: "appointments", label: "Appointments", icon: <Calendar size={18} />, route: "/demo/patient/appointments" },
   { id: "my-doctors", label: "My Care Team", icon: <HeartPulse size={18} />, route: "/demo/patient/my-doctors" },
   { id: "health-history", label: "Health History", icon: <History size={18} />, route: "/demo/patient/history" },
-  // { id: "health-summary",   label: "Health Summary",  icon: <HeartPulse size={18} />,         route: "/demo/patient/dashboard#ai-analysis-section" },
-  // { id: "analytics",        label: "Analytics",       icon: <BarChart2 size={18} /> },
-  // { id: "recommendations",  label: "Recommendations", icon: <Lightbulb size={18} />,          route: "/demo/patient/dashboard#ai-analysis-section" },
+  { id: "profile", label: "My Profile", icon: <User size={18} />, route: "/demo/patient/profile" },
 ];
 
 interface PatientSidebarProps {
@@ -108,12 +104,16 @@ export function PatientSidebar({ activeTab, onTabChange, patientName, riskLabel,
       {/* Bottom: User Profile + Logout */}
       <div className="px-4 py-4 border-t border-bgSoft">
         {/* User profile card */}
-        <div className="flex items-center gap-3 bg-[#F8FAFC] rounded-xl px-3 py-3 mb-3 border border-bgSoft">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold text-base shrink-0 uppercase">
+        <div
+          onClick={() => router.push("/demo/patient/profile")}
+          className="flex items-center gap-3 bg-[#F8FAFC] hover:bg-[#F1F5F9] transition-all rounded-xl px-3 py-3 mb-3 border border-bgSoft cursor-pointer group"
+          title="Click to view & edit profile"
+        >
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold text-base shrink-0 uppercase group-hover:scale-105 transition-transform">
             {patientName.charAt(0)}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="font-bold text-[#0F172A] text-sm truncate">{patientName}</p>
+            <p className="font-bold text-[#0F172A] text-sm truncate group-hover:text-primary transition-colors">{patientName}</p>
             <span className={cn("text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border inline-block mt-0.5", riskColor)}>
               {riskLabel}
             </span>

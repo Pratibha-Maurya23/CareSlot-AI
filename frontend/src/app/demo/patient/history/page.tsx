@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { Upload, FileText, History, Activity, FileIcon, Eye } from "lucide-react";
 import { Card } from "../../../../components/ui/Card";
 import { Badge } from "../../../../components/ui/Badge";
-import { DemoNavbar } from "../../../../components/layout/DemoNavbar";
 import { PatientSidebar, type PatientTab } from "../../../../components/patient/PatientSidebar";
 import { healthHistoryApi } from "@/lib/api";
 
