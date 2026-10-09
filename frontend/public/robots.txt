@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Allow: /demo
+Allow: /privacy
+Allow: /terms
+Disallow: /api/
+Disallow: /demo/*/dashboard
+
+Sitemap: https://mediflow-ai.vercel.app/sitemap.xml

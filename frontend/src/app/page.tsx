@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   Activity,
   CheckCircle2,
@@ -69,14 +70,14 @@ function HeroSection() {
               Advancing
             </span>
             <span className="text-accent block">Clinical</span>
-            <span className="text-primwhary dark:text-white block">
+            <span className="text-primary dark:text-white block">
               Superintelligence
             </span>
           </h1>
 
           <p
             className="font-sans text-base lg:text-lg leading-relaxed max-w-lg mt-6
-              text-primary/70 dark:text-white/70"
+              text-primary/80 dark:text-white/80"
           >
             MediFlow AI is the intelligence layer that triages patients in real
             time — reducing wait times, prioritizing emergencies, and empowering
@@ -84,22 +85,22 @@ function HeroSection() {
           </p>
 
           <div className="mt-8 flex flex-wrap gap-4">
-            <a
+            <Link
               href="/demo"
               className="px-7 py-3 rounded-xl font-semibold text-sm transition shadow-lg
                 bg-primary text-white hover:bg-secondary
                 dark:bg-accent dark:text-primary dark:hover:bg-secondary"
             >
               Book Demo
-            </a>
-            <a
-              href="#platform"
+            </Link>
+            <Link
+              href="#how-it-works"
               className="px-7 py-3 rounded-xl font-semibold text-sm transition
                 bg-white border-2 border-primary text-primary hover:bg-primary hover:text-white
                 dark:bg-transparent dark:border-2 dark:border-white/40 dark:text-white dark:hover:bg-white/10"
             >
               Explore the Platform
-            </a>
+            </Link>
           </div>
 
           <div className="mt-10 flex flex-wrap gap-6 items-center text-sm">
@@ -307,6 +308,7 @@ function HowItWorksSection() {
   return (
     <section
       id="how-it-works"
+      data-section="platform"
       className="py-24 px-8 lg:px-16 bg-white dark:bg-[#163248]"
     >
       {/* Header */}
@@ -474,7 +476,7 @@ function FeaturesSection() {
 
 function TriageStatusSection() {
   return (
-    <section className="py-20 px-8 lg:px-16 bg-primary dark:bg-[#0f2d42]">
+    <section id="priority-intel" className="py-20 px-8 lg:px-16 bg-primary dark:bg-[#0f2d42]">
       <div className="text-center mb-12">
         <h2 className="font-display text-4xl font-bold text-white">
           Real-Time Priority Intelligence
@@ -642,35 +644,92 @@ function TestimonialsSection() {
 }
 
 
+// ─── Call to Action (Item 20: Single Clear CTA) ───────────────────────────────
+
+function CallToActionSection() {
+  return (
+    <section className="py-20 px-6 sm:px-12 lg:px-16 bg-gradient-to-br from-primary via-[#163852] to-[#0f2d42] text-white text-center relative overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-accent/20 via-transparent to-transparent pointer-events-none" />
+      <div className="max-w-4xl mx-auto relative z-10">
+        <span className="inline-block mb-4 px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-widest bg-accent/20 text-accent border border-accent/40">
+          Transform Your Clinical Triage
+        </span>
+        <h2 className="font-display font-bold text-3xl sm:text-4xl lg:text-5xl leading-tight">
+          Ready to Cut Patient ER Wait Times by Over 70%?
+        </h2>
+        <p className="font-sans text-white/80 text-base sm:text-lg max-w-2xl mx-auto mt-4 leading-relaxed">
+          Experience our real-time medical triage intelligence. Test the patient symptom intake, risk stratification, and live doctor queues in seconds.
+        </p>
+
+        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <Link
+            href="/demo"
+            className="w-full sm:w-auto px-8 py-4 rounded-xl font-bold text-sm sm:text-base transition-all shadow-xl flex items-center justify-center gap-2
+              bg-accent text-primary hover:bg-white hover:scale-105 duration-200"
+          >
+            Launch Free Interactive Demo
+            <ChevronRight className="w-4 h-4" />
+          </Link>
+          <Link
+            href="/demo/doctor/auth"
+            className="w-full sm:w-auto px-7 py-4 rounded-xl font-semibold text-sm sm:text-base transition-all border-2 border-white/30 text-white hover:bg-white/10"
+          >
+            Doctor Portal Access
+          </Link>
+        </div>
+
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-xs text-white/70">
+          <span className="flex items-center gap-1.5">
+            <CheckCircle2 className="w-3.5 h-3.5 text-accent" /> Zero Hardware Setup
+          </span>
+          <span className="flex items-center gap-1.5">
+            <CheckCircle2 className="w-3.5 h-3.5 text-accent" /> Manchester Protocol Validated
+          </span>
+          <span className="flex items-center gap-1.5">
+            <CheckCircle2 className="w-3.5 h-3.5 text-accent" /> HIPAA &amp; DPDP Compliant Architecture
+          </span>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ─── Footer ───────────────────────────────────────────────────────────────────
 
 function Footer() {
   return (
-    <footer className="bg-primary text-white/60 py-10 px-8 lg:px-16">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 max-w-7xl mx-auto">
+    <footer className="bg-primary text-white/70 py-12 px-8 lg:px-16 border-t border-white/10">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 max-w-7xl mx-auto">
         <div>
-          <p className="font-display font-bold text-white text-lg flex items-center gap-2">
+          <Link href="/" className="font-display font-bold text-white text-lg flex items-center gap-2">
             <Activity className="w-5 h-5 text-accent" />
             MediFlow AI
-          </p>
-          <p className="text-white/40 text-xs mt-1">
-            AI-Powered Triage for Modern Healthcare
+          </Link>
+          <p className="text-white/60 text-xs mt-1">
+            Intelligent Triage &amp; Clinical Queue Optimization
           </p>
         </div>
-        <div className="flex flex-wrap gap-6 text-xs text-white/50">
-          {["Privacy Policy", "Terms", "Contact"].map((link) => (
-            <a
-              key={link}
-              href="#"
-              className="hover:text-white transition-colors duration-150"
-            >
-              {link}
-            </a>
-          ))}
+        <div className="flex flex-wrap gap-6 text-xs text-white/70">
+          <Link href="/privacy" className="hover:text-white transition-colors duration-150">
+            Privacy Policy
+          </Link>
+          <Link href="/terms" className="hover:text-white transition-colors duration-150">
+            Terms &amp; Conditions
+          </Link>
+          <Link href="/demo" className="hover:text-white transition-colors duration-150">
+            Live Demo
+          </Link>
+          <a href="mailto:support@mediflow.ai" className="hover:text-white transition-colors duration-150">
+            Contact Support
+          </a>
         </div>
       </div>
-      <div className="border-t border-white/10 mt-6 pt-6 text-center text-white/30 text-xs max-w-7xl mx-auto">
-        © {new Date().getFullYear()} MediFlow AI. All rights reserved.
+
+      <div className="border-t border-white/10 mt-8 pt-6 flex flex-col md:flex-row justify-between items-center gap-3 text-xs text-white/50 max-w-7xl mx-auto">
+        <p>© {new Date().getFullYear()} MediFlow AI Technologies. All rights reserved.</p>
+        <p className="text-[11px] text-white/40 text-center md:text-right">
+          Emergency notice: In case of acute medical emergencies, immediately call 112 or 911.
+        </p>
       </div>
     </footer>
   );
@@ -687,7 +746,7 @@ export default function HomePage() {
       <TriageStatusSection />
       <StatsSection />
       <TestimonialsSection />
-
+      <CallToActionSection />
       <Footer />
     </main>
   );

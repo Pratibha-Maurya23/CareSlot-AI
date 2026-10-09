@@ -32,6 +32,7 @@ export default function DoctorAuthPage() {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [honeypot, setHoneypot] = useState("");
 
   // Auto-redirect if already logged in as doctor
   useEffect(() => {
@@ -42,11 +43,14 @@ export default function DoctorAuthPage() {
   }, [router]);
 
   const handleSubmit = async () => {
+    const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     let isValid = true;
     const newErrors: Record<string, string> = {};
 
-    if (!email.trim() || !email.includes("@")) {
-      newErrors.email = "Please enter a valid clinic email address";
+    if (honeypot) return; // Silent rejection for bots
+
+    if (!email.trim() || !EMAIL_REGEX.test(email.trim())) {
+      newErrors.email = "Please enter a valid clinic email address (e.g., doctor@hospital.com)";
       isValid = false;
     }
 
@@ -56,9 +60,9 @@ export default function DoctorAuthPage() {
     }
 
     if (mode === "signup") {
-      if (!name.trim()) { newErrors.name = "Name is required"; isValid = false; }
-      if (!specialization.trim()) { newErrors.specialization = "Specialization is required"; isValid = false; }
-      if (!phone.trim()) { newErrors.phone = "Phone number is required"; isValid = false; }
+      if (!name.trim() || name.trim().length < 2) { newErrors.name = "Doctor full name is required (min 2 characters)"; isValid = false; }
+      if (!specialization.trim()) { newErrors.specialization = "Medical specialization is required"; isValid = false; }
+      if (!phone.trim() || phone.trim().length < 8) { newErrors.phone = "Valid contact phone number is required"; isValid = false; }
     }
 
     setErrors(newErrors);
@@ -133,6 +137,17 @@ export default function DoctorAuthPage() {
           )}
 
           <div className="mt-4 space-y-4">
+            {/* Anti-spam honeypot (Item 18) */}
+            <input
+              type="text"
+              name="_hp_trap"
+              value={honeypot}
+              onChange={(e) => setHoneypot(e.target.value)}
+              tabIndex={-1}
+              autoComplete="off"
+              className="hidden opacity-0 pointer-events-none absolute h-0 w-0"
+              aria-hidden="true"
+            />
             {mode === "signup" && (
               <>
                 <InputField

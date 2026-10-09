@@ -9,7 +9,7 @@ import {
   ChevronRight, AlertTriangle, UserCheck, Pill, ShieldAlert
 } from "lucide-react";
 import { PatientSidebar } from "@/components/patient/PatientSidebar";
-import { authApi, appointmentsApi, doctorsApi, type Appointment, type Doctor } from "@/lib/api";
+import { dashboardApi, type Appointment, type Doctor } from "@/lib/api";
 import { HealthAnalyticsSection } from "@/components/patient/HealthAnalyticsSection";
 
 interface UserProfile {
@@ -34,45 +34,11 @@ export default function PatientDashboardPage() {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [upcomingAppointments, setUpcomingAppointments] = useState<Appointment[]>([]);
   const [recommendedDoctors, setRecommendedDoctors] = useState<Doctor[]>([]);
+  const [dashboardStats, setDashboardStats] = useState<any>(null);
   const [loadingAppts, setLoadingAppts] = useState(true);
 
-  useEffect(() => {
-    const token = typeof window !== "undefined" ? localStorage.getItem("mediflow_token") : null;
-    if (!token) {
-      router.replace("/demo/patient/auth");
-      return;
-    }
-
-    // Load cached profile
-    try {
-      const cached = localStorage.getItem("mediflow_user");
-      if (cached) setUser(JSON.parse(cached));
-    } catch {}
-
-    authApi.me()
-      .then((res) => {
-        const merged = {
-          ...(typeof window !== "undefined" ? JSON.parse(localStorage.getItem("mediflow_user") || "{}") : {}),
-          ...res.user,
-        };
-        setUser(merged);
-        if (typeof window !== "undefined") {
-          localStorage.setItem("mediflow_user", JSON.stringify(merged));
-        }
-      })
-      .catch(() => {
-        try {
-          const cached = localStorage.getItem("mediflow_user");
-          if (cached) setUser(JSON.parse(cached));
-          else router.replace("/demo/patient/auth");
-        } catch {
-          router.replace("/demo/patient/auth");
-        }
-      });
-  }, [router]);
-
-  // Load appointments
-  const fetchAppointments = async () => {
+  // ─── Single Unified API Call for Patient Dashboard ──────────────────────────
+  const fetchDashboardData = async () => {
     setLoadingAppts(true);
     try {
       let patientId: string | undefined = undefined;
@@ -81,53 +47,61 @@ export default function PatientDashboardPage() {
         patientId = u.id || u._id;
       } catch {}
 
-      let list: Appointment[] = [];
-      try {
-        const res = await appointmentsApi.getAll(patientId ? { patientId } : undefined);
-        list = (res as any).data || (res as any).appointments || [];
-      } catch {}
-
-      if (list.length === 0 && typeof window !== "undefined") {
-        try {
-          const localStored = localStorage.getItem("mediflow_appointments");
-          if (localStored) {
-            list = JSON.parse(localStored);
-          }
-        } catch {}
+      // Calls ONLY ONE single unified API endpoint: GET /api/dashboard/patient
+      const res = await dashboardApi.patientOverview(patientId ? { patientId } : undefined);
+      if (res?.data) {
+        const { user: profile, upcomingAppointments: appts, recommendedDoctors: docs, stats } = res.data;
+        setUser(profile as any);
+        setUpcomingAppointments(appts || []);
+        if (docs && docs.length > 0) {
+          setRecommendedDoctors(docs.slice(0, 3));
+        }
+        setDashboardStats(stats);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("mediflow_user", JSON.stringify(profile));
+        }
       }
-
-      const filtered = list.filter((a) => {
-        const st = (a.status || "").toLowerCase();
-        return st !== "cancelled" && st !== "completed";
-      });
-
-      setUpcomingAppointments(filtered);
     } catch {
-      setUpcomingAppointments([]);
+      // Offline / cached session fallback
+      try {
+        const cached = localStorage.getItem("mediflow_user");
+        if (cached) setUser(JSON.parse(cached));
+        const localAppts = localStorage.getItem("mediflow_appointments");
+        if (localAppts) {
+          const list = JSON.parse(localAppts);
+          setUpcomingAppointments(list.filter((a: any) => {
+            const st = (a.status || "").toLowerCase();
+            return st !== "cancelled" && st !== "completed";
+          }));
+        }
+      } catch {}
     } finally {
       setLoadingAppts(false);
     }
   };
 
-  // Load sample doctors for care team quick view
   useEffect(() => {
-    doctorsApi.getAll({ isAvailable: "true" })
-      .then((res) => {
-        if (res.doctors && res.doctors.length > 0) {
-          setRecommendedDoctors(res.doctors.slice(0, 3));
-        }
-      })
-      .catch(() => {});
-  }, []);
+    const token = typeof window !== "undefined" ? localStorage.getItem("mediflow_token") : null;
+    if (!token) {
+      router.replace("/demo/patient/auth");
+      return;
+    }
 
-  useEffect(() => {
-    fetchAppointments();
-    const handleApptUpdate = () => fetchAppointments();
+    // Load cached profile immediately for instant UI render
+    try {
+      const cached = localStorage.getItem("mediflow_user");
+      if (cached) setUser(JSON.parse(cached));
+    } catch {}
+
+    // Fetch everything via the unified dashboard API
+    fetchDashboardData();
+
+    const handleApptUpdate = () => fetchDashboardData();
     window.addEventListener("appointmentUpdated", handleApptUpdate);
     return () => {
       window.removeEventListener("appointmentUpdated", handleApptUpdate);
     };
-  }, []);
+  }, [router]);
 
   if (!user) return null;
 

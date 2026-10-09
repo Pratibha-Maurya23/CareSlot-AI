@@ -40,6 +40,17 @@ app.use(cors({
   credentials: true,
 }));
 
+// HTTPS & Security Headers
+app.use((req, res, next) => {
+  if (process.env.NODE_ENV === 'production' && req.headers['x-forwarded-proto'] && req.headers['x-forwarded-proto'] !== 'https') {
+    return res.redirect(301, `https://${req.hostname}${req.url}`);
+  }
+  res.setHeader('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  next();
+});
+
 // Parse Cookies
 app.use(cookieParser());
 
@@ -61,15 +72,25 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
+const { rateLimiter, honeypotTrap } = require('./middleware/rateLimiter');
+
+// ── Rate Limiting & Anti-Spam Protection (Item 18) ───
+const generalApiLimiter = rateLimiter({ windowMs: 15 * 60 * 1000, max: 200 });
+const authLimiter = rateLimiter({ windowMs: 15 * 60 * 1000, max: 30, message: 'Too many authentication attempts. Please try again after 15 minutes.' });
+const triageLimiter = rateLimiter({ windowMs: 15 * 60 * 1000, max: 50, message: 'Triage request limit reached. Please wait a moment.' });
+
+// Apply general API rate limiter
+app.use('/api', generalApiLimiter);
+
 // ── API Routes ─────────────────────────────────────
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authLimiter, honeypotTrap(), authRoutes);
 app.use('/api/patients', patientRoutes);
 app.use('/api/doctors', doctorRoutes);
-app.use('/api/appointments', appointmentRoutes);
+app.use('/api/appointments', honeypotTrap(), appointmentRoutes);
 app.use('/api/records', recordRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/prompts', promptRoutes);
-app.use('/api/triage', triageRoutes);
+app.use('/api/triage', triageLimiter, triageRoutes);
 app.use('/api/health-history', healthHistoryRoutes);
 
 // ── Health Check ───────────────────────────────────

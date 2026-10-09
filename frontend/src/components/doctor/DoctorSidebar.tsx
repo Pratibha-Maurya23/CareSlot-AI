@@ -53,12 +53,15 @@ export default function Sidebar({ activePage, onNavigate }: { activePage: string
           <button
             key={id}
             id={`nav-${id}`}
-            className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-180 ease-in-out cursor-pointer border-none bg-transparent w-full text-left ${activePage === id ? 'bg-accent/20 text-white font-semibold' : 'text-white/65 hover:bg-white/8 hover:text-white'}`}
+            className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-180 ease-in-out cursor-pointer border-none w-full text-left relative ${activePage === id ? 'bg-white/20 text-white font-bold border-l-4 border-accent pl-3' : 'bg-transparent text-white/70 hover:bg-white/10 hover:text-white font-medium'}`}
             onClick={() => onNavigate(id)}
           >
-            <Icon size={18} className={`flex-shrink-0 ${activePage === id ? 'text-accent' : 'text-white/50'}`} />
+            <Icon size={18} className={`flex-shrink-0 ${activePage === id ? 'text-accent' : 'text-white/60'}`} />
             <span style={{ flex: 1 }}>{label}</span>
-            {badge && <span className="ml-auto px-2 py-0.5 bg-danger text-white rounded-full text-[10px] font-bold">{badge}</span>}
+            {badge && <span className="px-2 py-0.5 bg-danger text-white rounded-full text-[10px] font-bold">{badge}</span>}
+            {activePage === id && !badge && (
+              <span className="w-1.5 h-1.5 rounded-full bg-accent shadow-[0_0_6px_#62B6CB] shrink-0" />
+            )}
           </button>
         ))}
       </nav>

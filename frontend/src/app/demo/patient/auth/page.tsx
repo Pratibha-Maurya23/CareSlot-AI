@@ -48,32 +48,40 @@ export default function PatientAuthPage() {
 
 
 
+  const [honeypot, setHoneypot] = useState("");
+
   const toggleCondition = (c: string) =>
     setConditions(prev => prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c]);
 
-  /* ── Validation ── */
+  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  /* ── Validation (Item 17: Form Validation) ── */
   const validateSignup = () => {
     const e: Record<string, string> = {};
-    if (name.trim().length < 2) e.name = "Min 2 characters";
-    if (!email.includes("@")) e.email = "Enter a valid email";
-    if (password.length < 6) e.password = "Min 6 characters";
-    if (!age || Number(age) < 1) e.age = "Enter a valid age";
-    if (!height || Number(height) < 50) e.height = "Enter height in cm";
-    if (!weight || Number(weight) < 10) e.weight = "Enter weight in kg";
-    if (!bloodGroup || bloodGroup === "Select blood group") e.bloodGroup = "Select a blood group";
-    if (!gender || gender === "Select gender") e.gender = "Select a gender";
+    if (name.trim().length < 2) e.name = "Full name must be at least 2 characters";
+    if (!EMAIL_REGEX.test(email.trim())) e.email = "Please enter a valid email address (e.g., name@example.com)";
+    if (password.length < 6) e.password = "Password must be at least 6 characters";
+    if (!age || isNaN(Number(age)) || Number(age) < 1 || Number(age) > 120) e.age = "Enter a valid age (1–120)";
+    if (!height || isNaN(Number(height)) || Number(height) < 40 || Number(height) > 250) e.height = "Enter valid height in cm (40–250)";
+    if (!weight || isNaN(Number(weight)) || Number(weight) < 5 || Number(weight) > 300) e.weight = "Enter valid weight in kg (5–300)";
+    if (!bloodGroup || bloodGroup === "Select blood group") e.bloodGroup = "Select your blood group";
+    if (!gender || gender === "Select gender") e.gender = "Select your gender";
     return e;
   };
 
   const validateLogin = () => {
     const e: Record<string, string> = {};
-    if (!email.includes("@")) e.email = "Enter a valid email";
-    if (!password) e.password = "Enter your password";
+    if (!EMAIL_REGEX.test(email.trim())) e.email = "Please enter a valid email address";
+    if (!password || password.length < 6) e.password = "Please enter your password (min 6 characters)";
     return e;
   };
 
-  /* ── Submit — calls real backend ── */
+  /* ── Submit — calls real backend with Spam Protection (Item 18) ── */
   const handleSubmit = async () => {
+    if (honeypot) {
+      // Anti-spam honeypot triggered: bots fill hidden fields
+      return;
+    }
     const errs = mode === "signup" ? validateSignup() : validateLogin();
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setErrors({});
@@ -121,6 +129,18 @@ export default function PatientAuthPage() {
           </div>
           <h2 className="font-display text-2xl text-primary font-bold text-center mt-4">MediFlow AI</h2>
           <p className="text-secondary text-sm text-center mt-1 px-4">Your personal AI health companion</p>
+
+          {/* Anti-spam honeypot input field (Item 18) */}
+          <input
+            type="text"
+            name="_hp_trap"
+            value={honeypot}
+            onChange={(e) => setHoneypot(e.target.value)}
+            tabIndex={-1}
+            autoComplete="off"
+            className="hidden opacity-0 pointer-events-none absolute h-0 w-0"
+            aria-hidden="true"
+          />
 
           {/* Tab toggle */}
           <div className="bg-bgLight rounded-xl p-1 flex mt-6">

@@ -1,15 +1,16 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, Moon, Sun, Menu, X } from "lucide-react";
+import { Activity, Menu, X, ArrowRight } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 
 const navLinks = [
-  { label: "Home", href: "#hero" },
-  { label: "How It Works", href: "#how-it-works" },
-  { label: "Features", href: "#features" },
-  { label: "Contact", href: "/demo" },
+  { label: "Home", href: "/#hero" },
+  { label: "How It Works", href: "/#how-it-works" },
+  { label: "Features", href: "/#features" },
+  { label: "Triage Intelligence", href: "/#priority-intel" },
 ];
 
 export function Navbar() {
@@ -17,7 +18,8 @@ export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
 
-  if (pathname.startsWith("/demo")) {
+  // Hide global navbar on standalone demo screens if desired, but allow on landing & legal pages
+  if (pathname.startsWith("/demo/patient/") || pathname.startsWith("/demo/doctor/") || pathname.startsWith("/demo/admin/")) {
     return null;
   }
 
@@ -26,54 +28,58 @@ export function Navbar() {
       {/* Main bar */}
       <div
         className="h-16 flex items-center px-6 lg:px-12 justify-between
-          bg-white/80 backdrop-blur-md border-b border-bgSoft shadow-sm
-          dark:bg-primary/90 dark:border-white/10"
+          bg-white/90 backdrop-blur-md border-b border-bgSoft shadow-sm
+          dark:bg-primary/95 dark:border-white/10"
       >
         {/* Logo */}
-        <a href="#hero" className="flex items-center gap-2 shrink-0">
-          <Activity className="w-5 h-5 text-accent" />
-          <span className="font-display font-bold text-xl text-primary dark:text-white">
-            MediFlow AI
+        <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
+          <div className="w-8 h-8 rounded-lg bg-accent/20 dark:bg-accent/30 flex items-center justify-center text-accent group-hover:scale-105 transition-transform">
+            <Activity className="w-5 h-5 text-accent" />
+          </div>
+          <span className="font-display font-bold text-xl text-primary dark:text-white tracking-tight">
+            MediFlow <span className="text-accent">AI</span>
           </span>
-        </a>
+        </Link>
 
         {/* Desktop nav links */}
         <div className="hidden lg:flex items-center gap-8">
-          {navLinks.map(({ label, href }, i) => (
-            <a
+          {navLinks.map(({ label, href }) => (
+            <Link
               key={label}
               href={href}
-              className={
-                i === 0
-                  ? "text-lg font-bold text-accent"
-                  : "text-lg font-medium text-primary/70 hover:text-primary dark:text-white/70 dark:hover:text-white transition-colors"
-              }
+              className="text-sm font-semibold text-primary/75 hover:text-primary dark:text-white/80 dark:hover:text-accent transition-colors"
             >
               {label}
-            </a>
+            </Link>
           ))}
+          <Link
+            href="/privacy"
+            className="text-sm font-semibold text-primary/75 hover:text-primary dark:text-white/80 dark:hover:text-accent transition-colors"
+          >
+            Compliance
+          </Link>
         </div>
 
         {/* Right actions */}
         <div className="flex items-center gap-3">
-
           {/* CTA */}
-          <a
+          <Link
             href="/demo"
-            className="hidden sm:inline-flex px-4 py-2 rounded-lg text-sm font-semibold transition-colors duration-200
+            className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all shadow-sm
               bg-primary text-white hover:bg-secondary
-              dark:bg-accent dark:text-primary dark:hover:bg-secondary"
+              dark:bg-accent dark:text-primary dark:hover:bg-accent/80"
           >
-            Request Demo
-          </a>
+            Launch Demo
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
 
-          {/* Hamburger */}
+          {/* Mobile Hamburger */}
           <button
             onClick={() => setMobileOpen((o) => !o)}
-            aria-label="Toggle menu"
-            className="lg:hidden text-primary dark:text-white transition-colors"
+            aria-label="Toggle navigation menu"
+            className="lg:hidden p-2 rounded-lg text-primary dark:text-white hover:bg-bgLight/40 dark:hover:bg-white/10 transition-colors"
           >
-            {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
       </div>
@@ -82,33 +88,48 @@ export function Navbar() {
       {mobileOpen && (
         <div
           className="lg:hidden absolute left-0 right-0 z-40
-            bg-white dark:bg-primary shadow-xl rounded-b-2xl
-            border-t border-bgSoft dark:border-white/10 px-6 py-4"
+            bg-white/95 dark:bg-[#163248]/95 backdrop-blur-md shadow-xl rounded-b-2xl
+            border-b border-bgSoft dark:border-white/10 px-6 py-5 animate-slide-down"
         >
           <div className="flex flex-col gap-1">
             {navLinks.map(({ label, href }) => (
-              <a
+              <Link
                 key={label}
                 href={href}
                 onClick={() => setMobileOpen(false)}
-                className="py-2.5 text-sm font-medium text-primary/80 hover:text-primary
-                  dark:text-white/70 dark:hover:text-white transition-colors border-b
+                className="py-2.5 text-sm font-semibold text-primary/85 hover:text-primary
+                  dark:text-white/85 dark:hover:text-accent transition-colors border-b
                   border-bgSoft/60 dark:border-white/5 last:border-0"
               >
                 {label}
-              </a>
+              </Link>
             ))}
+            <Link
+              href="/privacy"
+              onClick={() => setMobileOpen(false)}
+              className="py-2.5 text-sm font-semibold text-primary/85 hover:text-primary dark:text-white/85 dark:hover:text-accent transition-colors"
+            >
+              Privacy &amp; HIPAA
+            </Link>
+            <Link
+              href="/terms"
+              onClick={() => setMobileOpen(false)}
+              className="py-2.5 text-sm font-semibold text-primary/85 hover:text-primary dark:text-white/85 dark:hover:text-accent transition-colors"
+            >
+              Terms of Service
+            </Link>
           </div>
 
-          <div className="flex items-center gap-3 pt-4 mt-2 border-t border-bgSoft dark:border-white/10">
-            <a
+          <div className="pt-4 mt-2 border-t border-bgSoft dark:border-white/10">
+            <Link
               href="/demo"
               onClick={() => setMobileOpen(false)}
-              className="ml-auto px-4 py-2 rounded-lg text-sm font-semibold
-                bg-primary text-white dark:bg-accent dark:text-primary"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold
+                bg-primary text-white dark:bg-accent dark:text-primary shadow-sm"
             >
-              Request Demo
-            </a>
+              Launch Live Demo
+              <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
         </div>
       )}

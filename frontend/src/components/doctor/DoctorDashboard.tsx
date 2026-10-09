@@ -104,45 +104,48 @@ export default function Dashboard() {
       try {
         const params = doctorUser?.id ? { doctorId: doctorUser.id } : {};
 
-        const [
-          summaryRes,
-          visitsRes,
-          distRes,
-          patientsRes,
-          doctorsRes,
-          apptRes,
-        ] = await Promise.allSettled([
-          dashboardApi.summary(params),
-          dashboardApi.monthlyVisits(params),
-          dashboardApi.caseDistribution(params),
-          patientsApi.getAll(params),
-          doctorsApi.getAll(),
-          appointmentsApi.getToday(params),
-        ]);
+        // Single Unified API Call for Doctor Dashboard
+        const overviewRes = await dashboardApi.doctorOverview(params).catch(() => null);
 
         if (cancelled) return;
 
-        if (summaryRes.status === 'fulfilled') setSummary(summaryRes.value.data.stats);
-        if (visitsRes.status   === 'fulfilled') setVisitData(visitsRes.value.data || []);
-        if (distRes.status     === 'fulfilled') {
-          const raw = distRes.value.data || [];
-          setCaseDist(raw.map(c => ({ ...c, color: c.color || CASE_COLORS[c.name] || '#6b9ab8' })));
+        if (overviewRes?.data) {
+          const { stats, visitData: vData, caseDistribution: cDist, patients: pList, doctors: dList, todayAppointments: aList } = overviewRes.data;
+          setSummary(stats);
+          setVisitData(vData || []);
+          setCaseDist((cDist || []).map(c => ({ ...c, color: c.color || CASE_COLORS[c.name] || '#6b9ab8' })));
+          setPatients(pList || []);
+          setDoctors(dList || []);
+          setAppointments(aList || []);
+        } else {
+          // Fallback if needed
+          const [summaryRes, visitsRes, distRes, patientsRes, doctorsRes, apptRes] = await Promise.allSettled([
+            dashboardApi.summary(params),
+            dashboardApi.monthlyVisits(params),
+            dashboardApi.caseDistribution(params),
+            patientsApi.getAll(params),
+            doctorsApi.getAll(),
+            appointmentsApi.getToday(params),
+          ]);
+          if (cancelled) return;
+          if (summaryRes.status === 'fulfilled') setSummary(summaryRes.value.data.stats);
+          if (visitsRes.status === 'fulfilled') setVisitData(visitsRes.value.data || []);
+          if (distRes.status === 'fulfilled') {
+            const raw = distRes.value.data || [];
+            setCaseDist(raw.map(c => ({ ...c, color: c.color || CASE_COLORS[c.name] || '#6b9ab8' })));
+          }
+          if (patientsRes.status === 'fulfilled') setPatients((patientsRes.value as any).patients || (patientsRes.value as any).data || []);
+          if (doctorsRes.status === 'fulfilled') setDoctors((doctorsRes.value as any).doctors || (doctorsRes.value as any).data || []);
+          if (apptRes.status === 'fulfilled') setAppointments((apptRes.value as any).data || (apptRes.value as any).appointments || []);
         }
-        if (patientsRes.status === 'fulfilled') setPatients((patientsRes.value as any).patients || (patientsRes.value as any).data || []);
-        if (doctorsRes.status  === 'fulfilled') setDoctors((doctorsRes.value as any).doctors || (doctorsRes.value as any).data || []);
-        if (apptRes.status     === 'fulfilled') setAppointments((apptRes.value as any).data || (apptRes.value as any).appointments || []);
 
         // Fetch this doctor's appointments
-        if (doctorUser?.id) {
+        if (doctorUser?.id && !cancelled) {
           try {
             const myRes = await appointmentsApi.getAll({ doctorId: doctorUser.id });
             if (!cancelled) setMyAppointments(myRes.appointments || []);
           } catch { /* ignore */ }
         }
-
-        const allFailed = [summaryRes, visitsRes, distRes, patientsRes, doctorsRes, apptRes]
-          .every(r => r.status === 'rejected');
-        if (allFailed) setError('Could not reach backend. Make sure your server is running on http://localhost:5000.');
       } catch {
         if (!cancelled) setError('Unexpected error loading dashboard data.');
       } finally {

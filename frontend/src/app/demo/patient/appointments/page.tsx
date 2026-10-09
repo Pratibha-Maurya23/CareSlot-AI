@@ -201,7 +201,6 @@ export default function PatientAppointmentsPage() {
 
   return (
     <>
-      <DemoNavbar title="Appointments" />
       <div className="flex min-h-screen bg-bgLight">
         <PatientSidebar
           activeTab="appointments"
@@ -344,8 +343,8 @@ export default function PatientAppointmentsPage() {
                   key={t}
                   onClick={() => setTab(t)}
                   className={`flex-1 py-4 text-sm font-bold transition-colors border-b-2 ${tab === t
-                      ? "border-primary text-primary bg-bgLight/30"
-                      : "border-transparent text-primary/50 hover:text-primary hover:bg-bgLight/20"
+                    ? "border-primary text-primary bg-bgLight/30"
+                    : "border-transparent text-primary/50 hover:text-primary hover:bg-bgLight/20"
                     }`}
                 >
                   {t === "upcoming" ? `Upcoming (${upcoming.length})` : `Previous (${previous.length})`}

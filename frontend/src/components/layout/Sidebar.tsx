@@ -35,21 +35,24 @@ export const Sidebar = () => {
       {/* Nav items */}
       <nav className="flex flex-col gap-1 flex-1" aria-label="Sidebar links">
         {navItems.map(({ label, href, icon: Icon }) => {
-          const isActive = pathname === href;
+          const isActive = pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
           return (
             <Link
               key={href}
               href={href}
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
+                "flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all relative",
                 isActive
-                  ? "text-white bg-white/15 border-l-2 border-accent"
+                  ? "text-white bg-white/20 border-l-4 border-accent shadow-sm"
                   : "text-white/70 hover:text-white hover:bg-white/10"
               )}
               aria-current={isActive ? "page" : undefined}
             >
-              <Icon className="w-4 h-4 flex-shrink-0" />
-              {label}
+              <Icon className={cn("w-4 h-4 flex-shrink-0 transition-colors", isActive ? "text-accent" : "text-white/60")} />
+              <span className="flex-1">{label}</span>
+              {isActive && (
+                <span className="w-1.5 h-1.5 rounded-full bg-accent shadow-[0_0_6px_#62B6CB] shrink-0" aria-hidden="true" />
+              )}
             </Link>
           );
         })}

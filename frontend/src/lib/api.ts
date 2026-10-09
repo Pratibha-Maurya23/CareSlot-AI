@@ -328,9 +328,62 @@ export const appointmentsApi = {
     del<{ success: boolean }>(`/api/appointments/${id}`),
 };
 
+export interface PatientDashboardData {
+  user: {
+    id?: string;
+    _id?: string;
+    patientId?: string;
+    name: string;
+    email: string;
+    age?: string | number;
+    gender?: string;
+    bloodGroup?: string;
+    height?: string;
+    weight?: string;
+    phone?: string;
+    address?: string;
+    conditions?: string[];
+    medications?: string;
+    allergies?: string;
+    status?: string;
+    priority?: string;
+  };
+  upcomingAppointments: Appointment[];
+  recommendedDoctors: Doctor[];
+  stats: {
+    totalAppointments: number;
+    upcomingAppointmentsCount: number;
+    completedVisits: number;
+    clinicalStatus: string;
+    riskLabel: string;
+    riskColor: string;
+    bmi?: string;
+    bmiStatus?: string;
+  };
+}
+
+export interface DoctorDashboardData {
+  stats: DashboardSummary;
+  visitData: MonthlyVisit[];
+  caseDistribution: CaseDistribution[];
+  patients: Patient[];
+  doctors: Doctor[];
+  todayAppointments: Appointment[];
+}
+
 // ─── DASHBOARD ────────────────────────────────────────────────────────────────
 
 export const dashboardApi = {
+  // Single Unified API Call for Patient Portal Dashboard
+  patientOverview: (params?: Record<string, string>) => {
+    const qs = params ? "?" + new URLSearchParams(params).toString() : "";
+    return get<{ success: boolean; data: PatientDashboardData }>(`/api/dashboard/patient${qs}`);
+  },
+  // Single Unified API Call for Doctor Portal Dashboard
+  doctorOverview: (params?: Record<string, string>) => {
+    const qs = params ? "?" + new URLSearchParams(params).toString() : "";
+    return get<{ success: boolean; data: DoctorDashboardData }>(`/api/dashboard/overview${qs}`);
+  },
   summary: (params?: Record<string, string>) => {
     const qs = params ? "?" + new URLSearchParams(params).toString() : "";
     return get<{ success: boolean; data: { stats: DashboardSummary } }>(`/api/dashboard/summary${qs}`);
